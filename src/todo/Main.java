@@ -1,6 +1,7 @@
 package todo;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedList;
 
 /**
@@ -11,36 +12,51 @@ import java.util.LinkedList;
  */
 public class Main {
 
-    static TaskList tasks = new TaskList();
+    static TaskList tasks;
 
     public static void add(String[] args) {
-        if (args.length == 2) {
-            tasks.add(new Task(0, args[1], ""));
+        String name = "";
+        String desc = "";
+        LocalDate deadline = null;
+        try {
+            name = args[1];
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            name = Screen.getStringWithPrompt("Task name");
+            if (name.equals("") && !Screen.confirmation("Leave name blank?")) {
+                Screen.abort();
+                return;
+            }
         }
-        if (args.length == 3) {
-            tasks.add(new Task(0, args[1], args[2]));
+        try {
+            desc = args[2];
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            desc = Screen.getStringWithPrompt("Task description");
         }
-        if (args.length == 4) {
-            try {
-                Task newtask = new Task(0, args[1], args[2]);
-                newtask.deadLine = LocalDate.parse(args[3]);
-                if (newtask.deadLine.compareTo(LocalDate.now()) < 0
-                        && !Screen.overduedTask()) {
-                    Screen.abort();
-                    return;
-                }
-                tasks.add(newtask);
-                Screen.alert("Add successful!");
-            } catch (Exception ex) {
-                Screen.showException(ex);
-                Screen.showDateFormat();
+        try {
+            if (args.length < 4) {
+                deadline = LocalDate.parse(Screen.getStringWithPrompt("Task deadline"));
+            } else {
+                deadline = LocalDate.parse(args[3]);
+            }
+            if (deadline.compareTo(LocalDate.now()) < 0
+                    && !Screen.overduedTask()) {
+                Screen.abort();
+                return;
+            }
+        } catch (DateTimeParseException ex) {
+            Screen.showDateFormat();
+            if (!Screen.confirmation("Leave deadline blank?")) {
+                Screen.abort();
+                return;
             }
         }
 
+        tasks = new TaskList();
+        tasks.add(name, desc, deadline);
+        tasks.close();
     }
 
-    public static void see(String[] args) {
-        LinkedList<Task> alltasks = tasks.allTask();
+    public static void showList(LinkedList<Task> alltasks) {
         if (alltasks == null) {
             Screen.unexpectedError();
             return;
@@ -55,7 +71,7 @@ public class Main {
             Screen.showTask(alltasks);
             int choice = Screen.getChoice() - 1;
             if (choice == -1) {
-                return;
+                break;
             }
             if (choice >= alltasks.size()) {
                 Screen.taskNotFoundAlert();
@@ -64,6 +80,12 @@ public class Main {
             }
         }
     }
+    public static void see(String[] args) {
+        tasks = new TaskList();
+        LinkedList<Task> alltasks = tasks.allTask();
+        showList(alltasks);
+        tasks.close();
+    }
 
     public static void mark(String[] args) {
         if (args.length != 2) {
@@ -71,6 +93,7 @@ public class Main {
             Screen.showMarkFormat();
         }
         try {
+            tasks = new TaskList();
             int id = Integer.parseInt(args[1]);
             tasks.mark(id);
             Screen.alert("Task " + id + " marked completed");
@@ -80,6 +103,8 @@ public class Main {
         } catch (Exception ex) {
             Screen.unexpectedError();
             Screen.showException(ex);
+        } finally {
+            tasks.close();
         }
 
     }
@@ -107,6 +132,6 @@ public class Main {
                     break;
             }
         }
-        tasks.close();
+
     }
 }

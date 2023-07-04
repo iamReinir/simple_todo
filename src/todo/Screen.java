@@ -12,8 +12,10 @@ public class Screen {
 
     static void showInstruction() {
         String instruction
-                = "To show all tasks:\t todo.jar alltask"
-                + "";
+                = "Show all tasks:\t java -jar todo.jar alltask\n"
+                + "Create a task:\t java -jar todo.jar add [task name] [task description] [task deadline]\n"
+                + "Mark done task:\t java -jar todo.jar done [task id]";
+        System.out.println(instruction);
     }
 
     static void illegalArgumentsError() {
@@ -36,6 +38,10 @@ public class Screen {
         System.out.println("Use \"mark [task number]\" to mark a task as completed");
     }
 
+    static boolean confirmation(String prompt) {
+        System.out.print(prompt + " (y/n)..");
+        return sc.next().toLowerCase().compareTo("y") == 0;
+    }
     static boolean overduedTask() {
         System.out.println("Do you want the task to be overdued?(y/n)");
         if (sc.next().toLowerCase().compareTo("y") == 0) {
@@ -80,6 +86,14 @@ public class Screen {
             System.out.println(taskRep);
         }
     }
+
+    static void pause() {
+        System.out.print("Press enter to continue..");
+        sc.nextLine();
+        System.out.println("");
+        System.out.println("------------------------");
+        System.out.println("");
+    }
     static void showTask(Task x) {
 
         String rep = x.id + "." + x.name + "\n"
@@ -89,7 +103,11 @@ public class Screen {
                 + "Deadline : " + String.valueOf(x.deadLine) + "\n"
                 + "Done? : " + ((x.isDone) ? "Yes" : "No");
         System.out.println(rep);
-        System.out.print("Press enter to continue..");
-        sc.nextLine();
+        pause();
+    }
+
+    static String getStringWithPrompt(String prompt) {
+        System.out.print(prompt + ":");
+        return sc.nextLine();
     }
 }

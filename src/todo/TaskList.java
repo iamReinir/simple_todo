@@ -6,7 +6,7 @@ import java.util.LinkedList;
 
 /**
  *
- * @author Giga P34
+ * @author Nguyen Xuan Trung
  */
 public class TaskList {
     //private String db_url = "jdbc:mysql://127.0.0.1:3306";
@@ -26,10 +26,17 @@ public class TaskList {
         }
     }
 
-    public boolean add(Task x) {
-        if (x.begin == null) {
-            x.begin = LocalDate.now();
+    public void add(String name, String desc, LocalDate deadline) {
+        try {
+            Task newtask = new Task(name, desc, deadline);
+            add(newtask);
+            Screen.alert("Add successful!");
+        } catch (Exception ex) {
+            Screen.showException(ex);
         }
+    }
+
+    public boolean add(Task x) {
         try {
             String qry = "INSERT INTO task(task_name,task_desc,task_begin,task_deadline)"
                     + " VALUES (?,?,?,?)";
@@ -50,6 +57,28 @@ public class TaskList {
         return true;
     }
 
+    LinkedList<Task> toLinkedList(ResultSet rest) throws SQLException {
+        LinkedList<Task> result = new LinkedList<>();
+        while (rest.next()) {
+            Task cur = new Task(rest.getInt("task_id"), rest.getString("task_name"), rest.getString("task_desc"));
+            Date begin = rest.getDate("task_begin");
+            if (begin != null) {
+                cur.begin = begin.toLocalDate();
+            }
+            Date done = rest.getDate("task_done");
+            if (done != null) {
+                cur.end = done.toLocalDate();
+            }
+            Date deadline = rest.getDate("task_DeadLine");
+            if (deadline != null) {
+                cur.deadLine = deadline.toLocalDate();
+            }
+            cur.isDone = rest.getBoolean("task_status");
+            result.add(cur);
+        }
+        return result;
+    }
+
     public LinkedList<Task> allTask() {
         LinkedList<Task> result = new LinkedList<>();
         ResultSet resultset = null;
@@ -57,25 +86,26 @@ public class TaskList {
             Statement statement = db.createStatement();
             statement.execute("SELECT * FROM task;");
             ResultSet rest = statement.getResultSet();
-            while (rest.next()) {
-                Task cur = new Task(rest.getInt("task_id"), rest.getString("task_name"), rest.getString("task_desc"));
-                Date begin = rest.getDate("task_begin");
-                if (begin != null) {
-                    cur.begin = begin.toLocalDate();
-                }
-                Date done = rest.getDate("task_done");
-                if (done != null) {
-                    cur.end = done.toLocalDate();
-                }
-                Date deadline = rest.getDate("task_DeadLine");
-                if (deadline != null) {
-                    cur.deadLine = deadline.toLocalDate();
-                }
-                cur.isDone = rest.getBoolean("task_status");
-                result.add(cur);
-            }
+            result = toLinkedList(rest);
         } catch (SQLException e) {
             Screen.showException(e);
+            return null;
+        }
+        return result;
+    }
+
+    public LinkedList<Task> allStatusTask(boolean status) {
+        String qry = "SELECT * FROM task WHERE task_status = ?;";
+        LinkedList<Task> result = new LinkedList<>();
+        try {
+            PreparedStatement stmt
+                    = db.prepareStatement(qry);
+            stmt.setBoolean(1, status);
+            stmt.execute();
+            ResultSet rest = stmt.getResultSet();
+            result = toLinkedList(rest);
+        } catch (SQLException ex) {
+            Screen.showException(ex);
             return null;
         }
         return result;
@@ -89,6 +119,15 @@ public class TaskList {
         stmt.setInt(2, id);
         stmt.execute();
         return true;
+    }
+
+    public void unmark(int id) throws Exception {
+        String qry = "UPDATE task SET task_status = false, task_done = ? WHERE task_id = ?;";
+        PreparedStatement stmt
+                = db.prepareStatement(qry);
+        stmt.setDate(1, null);
+        stmt.setInt(2, id);
+        stmt.execute();
     }
 
     public void close() {

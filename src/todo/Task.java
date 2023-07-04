@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package todo;
 
 import java.time.LocalDate;
@@ -28,6 +24,33 @@ public class Task {
         this.end = null;
         this.deadLine = null;
         this.isDone = false;
+    }
+
+    public Task(String name, String desc, LocalDate deadLine) {
+        this.name = name;
+        this.desc = desc;
+        this.begin = LocalDate.now();
+        this.deadLine = deadLine;
+        this.end = null;
+        this.isDone = false;
+    }
+
+    public void done() {
+        isDone = true;
+        this.end = LocalDate.now();
+    }
+
+    public void undone() {
+        isDone = false;
+        this.end = null;
+    }
+
+    public void flip() {
+        if (isDone) {
+            undone();
+        } else {
+            done();
+        }
     }
 
     public Task(int id, String name, String desc, LocalDate begin, LocalDate end, LocalDate deadLine, boolean isDone) {
