@@ -94,6 +94,26 @@ public class TaskList {
         return result;
     }
 
+    public boolean update(Task x) {
+        String qry = "UPDATE task "
+                + "SET task_name = ?, task_desc = ?, task_DeadLine=?, task_status = ?"
+                + " WHERE task_id = ?;";
+        try {
+            PreparedStatement stmt
+                    = db.prepareStatement(qry);
+            stmt.setString(1, x.name);
+            stmt.setString(2, x.desc);
+            stmt.setDate(3, x.deadLine == null ? null : Date.valueOf(x.deadLine));
+            stmt.setBoolean(4, x.isDone);
+            stmt.setInt(5, x.id);
+            stmt.execute();
+        } catch (SQLException ex) {
+            Screen.showException(ex);
+            return false;
+        }
+        return true;
+    }
+
     public LinkedList<Task> allStatusTask(boolean status) {
         String qry = "SELECT * FROM task WHERE task_status = ?;";
         LinkedList<Task> result = new LinkedList<>();

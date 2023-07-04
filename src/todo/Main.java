@@ -9,6 +9,8 @@ import java.util.LinkedList;
  * @author Nguyen Xuan Trung QE170172 todo app, it can: add a task, see all
  * tasks -> choose one task for edit/extra info, see all done tasks, see all
  * pending tasks mark a task as done.
+ *
+ * this application only work when my tunnel agent is on.
  */
 public class Main {
 
@@ -57,32 +59,126 @@ public class Main {
     }
 
     public static void showList(LinkedList<Task> alltasks) {
+        Screen.horiLine();
         if (alltasks == null) {
             Screen.unexpectedError();
             return;
         } else if (alltasks.size() == 1) {
             Screen.showTask(alltasks.element());
             return;
-        } else if (alltasks.size() == 0) {
+        } else if (alltasks.isEmpty()) {
             Screen.alert("Empty task list.");
             return;
         }
         while (true) {
             Screen.showTask(alltasks);
-            int choice = Screen.getChoice() - 1;
-            if (choice == -1) {
+            int choice = Screen.getChoice();
+            if (choice == 0) {
                 break;
             }
-            if (choice >= alltasks.size()) {
+            boolean found = false;
+            for (Task x : alltasks) {
+                if (x.id == choice) {
+                    Screen.horiLine();
+                    Screen.showTask(x);
+                    if (Screen.confirmation("Edit the task?")) {
+                        editTask(x);
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
                 Screen.taskNotFoundAlert();
-            } else {
-                Screen.showTask(alltasks.get(choice));
             }
         }
     }
-    public static void see(String[] args) {
+
+    public static void editTask(Task x) {
+        String newName = null;
+        String newDesc = null;
+        String newDeadline = null;
+        String isDone = null;
+        Screen.horiLine();
+        Screen.showTask(x);
+        Screen.alert("You will now edit this task. This action can not be cancelled. Enter blank to keep the old value.");
+        newName = Screen.getStringWithPrompt("New task name");
+        newName = newName.equals("") ? x.name : newName;
+        newDesc = Screen.getStringWithPrompt("New task description");
+        newDesc = newDesc.equals("") ? x.desc : newDesc;
+        newDeadline = Screen.getStringWithPrompt("New task deadline");
+        while (newDeadline.equals("") == false) {
+            try {
+                x.deadLine = LocalDate.parse(newDeadline);
+                if (x.deadLine.compareTo(LocalDate.now()) < 0
+                        && !Screen.confirmation("Deadline already overdued. Keep it?")) {
+                    continue;
+                }
+                newDeadline = "";
+            } catch (DateTimeParseException ex) {
+                Screen.alert("Wrong date format");
+                Screen.showDateFormat();
+                newDeadline = Screen.getStringWithPrompt("New task deadline");
+            }
+        }
+        isDone = Screen.getStringWithPrompt("Completed task? (y/n)").toLowerCase();
+        boolean valid = false;
+        while (!valid) {
+            valid = true;
+            switch (isDone) {
+            case "y":
+                x.isDone = true;
+                break;
+            case "n":
+                x.isDone = false;
+            case "":
+                break;
+            default:
+                Screen.alert("Invalid value.");
+                valid = false;
+                break;
+            }
+        }
+        x.name = newName;
+        x.desc = newDesc;
         tasks = new TaskList();
-        LinkedList<Task> alltasks = tasks.allTask();
+        if (tasks.update(x)) {
+            Screen.alert("Update task successfully!");
+        } else {
+            Screen.alert("Update failed");
+        }
+        tasks.close();
+    }
+
+    public static void see(String[] args) {
+        LinkedList<Task> alltasks = null;
+        boolean status = false;
+        if (args.length > 2) {
+            Screen.illegalArgumentsError();
+            Screen.showAllTaskInstruction();
+            return;
+        }
+        if (args.length == 2) {
+            switch (args[1]) {
+                case "done":
+                case "finish":
+                    status = true;
+                    break;
+                case "pending":
+                case "unfinish":
+                    status = false;
+                    break;
+                default:
+                    Screen.illegalArgumentsError();
+                    Screen.showAllTaskInstruction();
+                    return;
+            }
+            tasks = new TaskList();
+            alltasks = tasks.allStatusTask(status);
+        } else if (args.length == 1) {
+            tasks = new TaskList();
+            alltasks = tasks.allTask();
+        }
         showList(alltasks);
         tasks.close();
     }
@@ -121,6 +217,7 @@ public class Main {
                     add(args);
                     break;
                 case "check":
+                    break;
                 case "alltask":
                     see(args);
                     break;

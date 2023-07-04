@@ -1,5 +1,7 @@
 package todo;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -15,6 +17,15 @@ public class Screen {
                 = "Show all tasks:\t java -jar todo.jar alltask\n"
                 + "Create a task:\t java -jar todo.jar add [task name] [task description] [task deadline]\n"
                 + "Mark done task:\t java -jar todo.jar done [task id]";
+        System.out.println(instruction);
+    }
+
+    static void showAllTaskInstruction() {
+        String instruction
+                = "Usage:\n"
+                + "Show all done task:\tjava -jar todo.jar alltask done\n"
+                + "Show all pending task:\tjava -jar todo.jar alltask pending\n"
+                + "Show all task\t\tjava -jar todo.jar alltask";
         System.out.println(instruction);
     }
 
@@ -40,11 +51,11 @@ public class Screen {
 
     static boolean confirmation(String prompt) {
         System.out.print(prompt + " (y/n)..");
-        return sc.next().toLowerCase().compareTo("y") == 0;
+        return sc.nextLine().toLowerCase().compareTo("y") == 0;
     }
     static boolean overduedTask() {
         System.out.println("Do you want the task to be overdued?(y/n)");
-        if (sc.next().toLowerCase().compareTo("y") == 0) {
+        if (sc.nextLine().toLowerCase().compareTo("y") == 0) {
             return true;
         } else {
             return false;
@@ -65,6 +76,7 @@ public class Screen {
         }
         return result;
     }
+
     static void abort() {
         System.out.println("Abort!");
     }
@@ -94,6 +106,12 @@ public class Screen {
         System.out.println("------------------------");
         System.out.println("");
     }
+
+    static void horiLine() {
+        System.out.println("");
+        System.out.println("------------------------");
+        System.out.println("");
+    }
     static void showTask(Task x) {
 
         String rep = x.id + "." + x.name + "\n"
@@ -103,7 +121,6 @@ public class Screen {
                 + "Deadline : " + String.valueOf(x.deadLine) + "\n"
                 + "Done? : " + ((x.isDone) ? "Yes" : "No");
         System.out.println(rep);
-        pause();
     }
 
     static String getStringWithPrompt(String prompt) {
