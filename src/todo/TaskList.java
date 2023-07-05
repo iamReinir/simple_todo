@@ -14,6 +14,7 @@ public class TaskList {
     private Connection db;
 
     public TaskList() {
+        Screen.alert("Connecting to the database...");
         Statement stmt = null;
         ResultSet resultset = null;
         try {            
@@ -24,6 +25,7 @@ public class TaskList {
         } catch (SQLException e) {
             Screen.showException(e);
         }
+        Screen.alert("Connecting succesfully");
     }
 
     public void add(String name, String desc, LocalDate deadline) {
